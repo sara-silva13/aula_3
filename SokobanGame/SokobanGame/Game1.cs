@@ -37,12 +37,10 @@ public class Game1 : Game
     {
         // TODO: Add your initialization logic here
         LoadLevel("level1.txt");
-        _graphics.PreferredBackBufferHeight = tileSize * level.GetLength(1); //definição da altura
+        _graphics.PreferredBackBufferHeight = tileSize * (1 + level.GetLength(1)); //definição da altura
         _graphics.PreferredBackBufferWidth = tileSize * level.GetLength(0); //definição da largura
         _graphics.ApplyChanges(); //aplica a atualização da janela
-
         sokoban.LoadContents();
-
         base.Initialize();
     }
 
@@ -111,6 +109,17 @@ public class Game1 : Game
                 }
             }
         }
+        // Draw UI
+        _spriteBatch.DrawString(font,// Tipo de letra
+        "Tempo Decorrido = ", // Texto
+        new Vector2(5, level.GetLength(1) * tileSize + 5), // Posição do texto
+        Color.White, // Cor da letra
+        0f, //Rotação
+        Vector2.Zero, // Origem
+        2f, // Escala
+        SpriteEffects.None, //Sprite effect (FlipHorizontally)
+        0); // Ordenar sprites
+
         sokoban.Draw(_spriteBatch);
 
         foreach (Point b in boxes)

@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using System.Numerics;
 using System.Reflection.Metadata;
+using Vector2 = Microsoft.Xna.Framework.Vector2;
 
 namespace SokobanGame
 {
@@ -23,6 +24,9 @@ namespace SokobanGame
         private Game1 game; //reference from Game1 to Player
         private bool keysReleased = true;
         private Direction direction = Direction.Down;
+        private int delta = 0;
+        private int speed = 1;
+        private Vector2 directionVector;
 
         public Point Position => position; //auto função (equivalente a ter só get sem put)
 
@@ -55,32 +59,39 @@ namespace SokobanGame
         }
         public void Update(GameTime gameTime)
         {
-            Point lastPosition = position;
-            KeyboardState kState = Keyboard.GetState();
-            if (keysReleased)
+            if (delta > 0)
             {
-                keysReleased = false;
+                delta = (delta + speed) % Game1.tileSize;
+            }
+            else
+            {
+                Point lastPosition = position;
+                KeyboardState kState = Keyboard.GetState();
+
                 if ((kState.IsKeyDown(Keys.A)) || (kState.IsKeyDown(Keys.Left)))
                 {
                     position.X--;
                     direction = Direction.Left;
+                    delta = speed;
                 }
                 else if ((kState.IsKeyDown(Keys.W)) || (kState.IsKeyDown(Keys.Up)))
                 {
                     position.Y--;
                     direction = Direction.Up;
+                    delta = speed;
                 }
                 else if ((kState.IsKeyDown(Keys.S)) || (kState.IsKeyDown(Keys.Down)))
                 {
                     position.Y++;
                     direction = Direction.Down;
+                    delta = speed;
                 }
                 else if ((kState.IsKeyDown(Keys.D)) || (kState.IsKeyDown(Keys.Right)))
                 {
                     position.X++;
                     direction = Direction.Right;
+                    delta = speed;
                 }
-                else keysReleased = true;
 
                 // destino é caixa?
                 if (game.HasBox(position.X, position.Y))
@@ -110,23 +121,56 @@ namespace SokobanGame
                     if (!game.FreeTile(position.X, position.Y))
                         position = lastPosition;
                 }
-            }
-            else
-            {
-                if (kState.IsKeyUp(Keys.A) && kState.IsKeyUp(Keys.W) &&
-                    kState.IsKeyUp(Keys.S) && kState.IsKeyUp(Keys.D))
+                if (kState.IsKeyDown(Keys.A))
                 {
-                    keysReleased = true;
+                position.X--;
+                direction = Direction.Left;
+                delta = speed;
+                // directionVector = new Vector2(-1, 0);
+                directionVector = -Vector2.UnitX;
+                }
+                else if ((kState.IsKeyDown(Keys.D)) || (kState.IsKeyDown(Keys.Right)))
+                {
+                    position.X++;
+                    direction = Direction.Right;
+                    delta = speed;
+                    directionVector = Vector2.UnitX;
+                }
+                else if ((kState.IsKeyDown(Keys.W)) || (kState.IsKeyDown(Keys.Up)))
+                {
+                    position.Y--;
+                    direction = Direction.Up;
+                    delta = speed;
+                    directionVector = -Vector2.UnitY;
+                }
+                else if ((kState.IsKeyDown(Keys.S)) || (kState.IsKeyDown(Keys.Down)))
+                {
+                    position.Y++;
+                    direction = Direction.Down;
+                    delta = speed;
+                    directionVector = Vector2.UnitY;
                 }
             }
+           
+            
+
+
         }
         public void Draw(SpriteBatch sb)
         {
-            Rectangle rect = new Rectangle(Game1.tileSize * position.X,
-                                           Game1.tileSize * position.Y,
-                                           Game1.tileSize, Game1.tileSize);
-
-            sb.Draw(sprites[(int)direction][0], rect, Color.White); //desenha o Player
+            Vector2 pos = position.ToVector2() * Game1.tileSize;
+            int frame = 0;
+            if (delta > 0)
+            {
+                pos -= (Game1.tileSize - delta) * directionVector;
+                float animSpeed = 8f;
+                frame = (int)((delta / speed) % ((int)animSpeed * sprites[(int)direction].Length) / animSpeed);
+            }
+            //Rectangle rect = new Rectangle(Game1.tileSize * position.X,
+            // Game1.tileSize * position.Y,
+            // Game1.tileSize, Game1.tileSize);
+            Rectangle rect = new Rectangle(pos.ToPoint(), new Point(Game1.tileSize));
+            sb.Draw(sprites[(int)direction][frame], rect, Color.White); //desenha o Player
         }
     }
 }
